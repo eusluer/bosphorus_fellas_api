@@ -17,7 +17,7 @@
 
 ### Base URL
 ```
-http://localhost:5166
+https://w101-production-e26e.up.railway.app
 ```
 
 ### Content-Type
@@ -827,7 +827,7 @@ const addEventWithPhoto = async (eventData, photoFile) => {
 ## 📱 Swagger UI
 Canlı API dokümantasyonu ve test için:
 ```
-http://localhost:5166/swagger/index.html
+https://w101-production-e26e.up.railway.app/swagger/index.html
 ```
 
 ---
