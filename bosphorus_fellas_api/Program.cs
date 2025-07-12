@@ -11,6 +11,10 @@ using bosphorus_fellas_api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Railway için port yapılandırması
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -110,7 +114,22 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Health check endpoint for Railway
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+app.MapGet("/health", () => 
+{
+    try
+    {
+        return Results.Ok(new { 
+            status = "healthy", 
+            timestamp = DateTime.UtcNow,
+            environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown",
+            port = Environment.GetEnvironmentVariable("PORT") ?? "5000"
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Health check failed: {ex.Message}");
+    }
+});
 
 // Login endpoint'i
 app.MapPost("/api/login", async (LoginDto loginDto, ApplicationDbContext context, JwtService jwtService, ILogger<Program> logger) =>
