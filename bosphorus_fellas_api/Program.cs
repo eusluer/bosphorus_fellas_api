@@ -109,6 +109,9 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Health check endpoint for Railway
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
 // Login endpoint'i
 app.MapPost("/api/login", async (LoginDto loginDto, ApplicationDbContext context, JwtService jwtService, ILogger<Program> logger) =>
 {
