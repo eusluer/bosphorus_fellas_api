@@ -1,0 +1,840 @@
+# 🚀 Bosphorus Fellas API - Frontend Kullanım Klavuzu
+
+## 📋 İçindekiler
+1. [Genel Bilgiler](#genel-bilgiler)
+2. [Authentication](#authentication)
+3. [Dosya Yükleme](#dosya-yükleme)
+4. [Üyelik İşlemleri](#üyelik-işlemleri)
+5. [İçerik Görüntüleme](#içerik-görüntüleme)
+6. [Etkinlik İşlemleri](#etkinlik-işlemleri)
+7. [Admin İşlemleri](#admin-işlemleri)
+8. [Hata Kodları](#hata-kodları)
+9. [Örnek Kullanım Senaryoları](#örnek-kullanım-senaryoları)
+
+---
+
+## 🔧 Genel Bilgiler
+
+### Base URL
+```
+http://localhost:5166
+```
+
+### Content-Type
+- JSON istekler için: `application/json`
+- Dosya yükleme için: `multipart/form-data`
+
+### Authorization
+Korumalı endpoint'ler için header:
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+---
+
+## 🔐 Authentication
+
+### 1. Login (Giriş)
+```http
+POST /api/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "sifre": "password123"
+}
+```
+
+**Response (Başarılı):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "userType": "admin", // veya "uye"
+  "userId": 1,
+  "ad": "John",
+  "soyad": "Doe",
+  "email": "user@example.com",
+  "expiresAt": "2024-01-01T12:00:00Z"
+}
+```
+
+**Response (Hata):**
+```json
+{
+  "message": "Email veya şifre hatalı."
+}
+```
+
+**Özel Durumlar:**
+- Pasif üye: `"Üyeliğiniz pasif duruma getirilmiştir. Lütfen yöneticiye başvurunuz."`
+
+### 2. Profil Bilgileri
+```http
+GET /api/profile
+Authorization: Bearer TOKEN
+```
+
+**Response (Admin):**
+```json
+{
+  "userId": 1,
+  "userType": "admin",
+  "ad": "Admin",
+  "soyad": "User",
+  "email": "admin@example.com",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+```
+
+**Response (Üye):**
+```json
+{
+  "userId": 1,
+  "userType": "uye",
+  "ad": "John",
+  "soyad": "Doe",
+  "email": "john@example.com",
+  "telefon": "05551234567",
+  "dogumTarihi": "1990-01-01",
+  "sehir": "İstanbul",
+  "instagram": "@johndoe",
+  "adres": "Adres bilgisi",
+  "aracMarka": "BMW",
+  "aracModel": "X5",
+  "aracYili": "2020",
+  "plaka": "34ABC123",
+  "deneyim": 5,
+  "ilgiAlanlari": "Off-road, uzun yol",
+  "acilDurumKisi": "Jane Doe",
+  "acilDurumTelefon": "05559876543",
+  "status": true,
+  "fotograf": "https://supabase-url/profil_fotolari/abc123.jpg",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+```
+
+### 3. Profil Güncelleme (Sadece Üyeler)
+```http
+PUT /api/profile
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "telefon": "05551234567",
+  "sehir": "İstanbul",
+  "instagram": "@johndoe",
+  "adres": "Yeni adres",
+  "aracMarka": "BMW",
+  "aracModel": "X5",
+  "aracYili": "2020",
+  "plaka": "34ABC123",
+  "deneyim": 5,
+  "ilgiAlanlari": "Off-road",
+  "acilDurumKisi": "Jane Doe",
+  "acilDurumTelefon": "05559876543",
+  "emailBildirim": true,
+  "fotograf": "https://supabase-url/profil_fotolari/new-photo.jpg"
+}
+```
+
+**Not:** Tüm alanlar opsiyonel. Sadece güncellemek istediğiniz alanları gönderin.
+
+**Response:**
+```json
+{
+  "message": "Profil başarıyla güncellendi."
+}
+```
+
+---
+
+## 📸 Dosya Yükleme
+
+### 1. Fotoğraf Yükleme
+```http
+POST /api/upload
+Authorization: Bearer TOKEN
+Content-Type: multipart/form-data
+
+Form Data:
+- file: [IMAGE_FILE]
+- folder: "profil_fotolari" // veya "etkinlikler", "haberler", "sponsorlu"
+```
+
+**Response:**
+```json
+{
+  "url": "https://uhvtwlhbhprivbzrdoen.supabase.co/storage/v1/object/public/urller/profil_fotolari/abc123.jpg",
+  "fileName": "abc123.jpg",
+  "filePath": "profil_fotolari/abc123.jpg",
+  "fileSize": 1024000
+}
+```
+
+**Kısıtlamalar:**
+- Maksimum dosya boyutu: 5MB
+- Desteklenen formatlar: JPEG, PNG, GIF, WebP
+- Klasörler: `profil_fotolari`, `etkinlikler`, `haberler`, `sponsorlu`
+
+### 2. Fotoğraf Silme
+```http
+DELETE /api/upload
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "filePath": "profil_fotolari/abc123.jpg"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Dosya başarıyla silindi."
+}
+```
+
+---
+
+## 👥 Üyelik İşlemleri
+
+### 1. Üyelik Başvurusu
+```http
+POST /api/uyelik-basvurusu
+Content-Type: application/json
+
+{
+  "ad": "John",
+  "soyad": "Doe",
+  "email": "john@example.com",
+  "telefon": "05551234567",
+  "dogumTarihi": "1990-01-01",
+  "sehir": "İstanbul",
+  "instagram": "@johndoe",
+  "adres": "Tam adres bilgisi",
+  "aracMarka": "BMW",
+  "aracModel": "X5",
+  "aracYili": "2020",
+  "plaka": "34ABC123",
+  "deneyim": 5,
+  "ilgiAlanlari": "Off-road, uzun yol",
+  "neden": "Neden katılmak istiyorum",
+  "acilDurumKisi": "Jane Doe",
+  "acilDurumTelefon": "05559876543",
+  "sartlar": true,
+  "kisiselVeri": true,
+  "emailBildirim": true,
+  "fotograf": "https://supabase-url/profil_fotolari/abc123.jpg"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Başvurunuz başarıyla alındı. En kısa sürede size dönüş yapılacaktır.",
+  "id": 1,
+  "durum": "bekliyor"
+}
+```
+
+### 2. Başvuru Durumu Sorgulama
+```http
+GET /api/uyelik-basvurusu/{id}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "ad": "John",
+  "soyad": "Doe",
+  "email": "john@example.com",
+  "durum": "bekliyor", // "bekliyor", "onaylandı", "reddedildi"
+  "basvuru_tarihi": "2024-01-01T00:00:00Z"
+}
+```
+
+---
+
+## 📰 İçerik Görüntüleme (Sadece Giriş Yapmış Kullanıcılar)
+
+### 1. Sponsorları Listele
+```http
+GET /api/sponsorlar
+Authorization: Bearer TOKEN
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "baslik": "Sponsor Başlığı",
+    "icerik": "Sponsor içerik detayları",
+    "fotograf": "https://supabase-url/sponsorlu/photo.jpg",
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+]
+```
+
+### 2. Haberleri Listele
+```http
+GET /api/haberler
+Authorization: Bearer TOKEN
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "baslik": "Haber Başlığı",
+    "aciklama": "Haber içerik detayları",
+    "fotograf": "https://supabase-url/haberler/photo.jpg",
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+]
+```
+
+### 3. Etkinlikleri Listele
+```http
+GET /api/etkinlikler
+Authorization: Bearer TOKEN
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "baslik": "Etkinlik Başlığı",
+    "aciklama": "Etkinlik açıklaması",
+    "fotograf": "https://supabase-url/etkinlikler/photo.jpg",
+    "adres": "Etkinlik adresi",
+    "zaman": "2024-12-31",
+    "status": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "katilimciSayisi": 15,
+    "katilimDurumu": false // Kullanıcının katılım durumu
+  }
+]
+```
+
+---
+
+## 🎯 Etkinlik İşlemleri (Sadece Üyeler)
+
+### 1. Etkinliğe Katılma
+```http
+POST /api/etkinlik/katil
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "etkinlikId": 1
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Etkinliğe başarıyla katıldınız.",
+  "katilimId": 1
+}
+```
+
+### 2. Etkinlikten Ayrılma
+```http
+DELETE /api/etkinlik/{id}/ayril
+Authorization: Bearer TOKEN
+```
+
+**Response:**
+```json
+{
+  "message": "Etkinlikten başarıyla ayrıldınız."
+}
+```
+
+---
+
+## 🔧 Admin İşlemleri (Sadece Admin)
+
+### 1. Bekleyen Başvuruları Listele
+```http
+GET /api/admin/basvurular
+Authorization: Bearer ADMIN_TOKEN
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "ad": "John",
+    "soyad": "Doe",
+    "email": "john@example.com",
+    "telefon": "05551234567",
+    "sehir": "İstanbul",
+    "durum": "bekliyor",
+    "fotograf": "https://supabase-url/profil_fotolari/abc123.jpg",
+    "basvuruTarihi": "2024-01-01T00:00:00Z"
+  }
+]
+```
+
+### 2. Başvuru Detayını Görüntüle
+```http
+GET /api/admin/basvuru/{id}
+Authorization: Bearer ADMIN_TOKEN
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "ad": "John",
+  "soyad": "Doe",
+  "email": "john@example.com",
+  "telefon": "05551234567",
+  "dogumTarihi": "1990-01-01",
+  "sehir": "İstanbul",
+  "instagram": "@johndoe",
+  "adres": "Adres bilgisi",
+  "aracMarka": "BMW",
+  "aracModel": "X5",
+  "aracYili": "2020",
+  "plaka": "34ABC123",
+  "deneyim": 5,
+  "ilgiAlanlari": "Off-road",
+  "neden": "Katılım nedeni",
+  "acilDurumKisi": "Jane Doe",
+  "acilDurumTelefon": "05559876543",
+  "sartlar": true,
+  "kisiselVeri": true,
+  "emailBildirim": true,
+  "fotograf": "https://supabase-url/profil_fotolari/abc123.jpg",
+  "durum": "bekliyor",
+  "basvuruTarihi": "2024-01-01T00:00:00Z"
+}
+```
+
+### 3. Başvuruyu Onayla/Reddet
+```http
+POST /api/admin/basvuru-karar
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "basvuruId": 1,
+  "karar": "onayla", // "onayla" veya "reddet"
+  "reddetmeNedeni": "İsteğe bağlı reddetme nedeni"
+}
+```
+
+**Response (Onay):**
+```json
+{
+  "message": "Başvuru onaylandı ve üye kaydı oluşturuldu.",
+  "uyeId": 1,
+  "geciciSifre": "123456"
+}
+```
+
+**Response (Red):**
+```json
+{
+  "message": "Başvuru reddedildi.",
+  "reddetmeNedeni": "Belirtilen neden"
+}
+```
+
+### 4. Tüm Üyeleri Listele
+```http
+GET /api/admin/uyeler
+Authorization: Bearer ADMIN_TOKEN
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "ad": "John",
+    "soyad": "Doe",
+    "email": "john@example.com",
+    "telefon": "05551234567",
+    "sehir": "İstanbul",
+    "status": true,
+    "fotograf": "https://supabase-url/profil_fotolari/abc123.jpg",
+    "uyelikTarihi": "2024-01-01T00:00:00Z"
+  }
+]
+```
+
+### 5. Üye Durumunu Değiştir
+```http
+POST /api/admin/uye-status
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "uyeId": 1,
+  "status": false // true: aktif, false: pasif
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Üye durumu pasif olarak güncellendi.",
+  "uyeId": 1,
+  "yeniStatus": false
+}
+```
+
+### 6. Sponsor Ekle
+```http
+POST /api/admin/sponsor
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "baslik": "Sponsor Başlığı",
+  "icerik": "Sponsor içerik detayları",
+  "fotograf": "https://supabase-url/sponsorlu/photo.jpg"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Sponsor içeriği başarıyla eklendi.",
+  "id": 1
+}
+```
+
+### 7. Haber Ekle
+```http
+POST /api/admin/haber
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "baslik": "Haber Başlığı",
+  "aciklama": "Haber içerik detayları",
+  "fotograf": "https://supabase-url/haberler/photo.jpg"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Haber başarıyla eklendi.",
+  "id": 1
+}
+```
+
+### 8. Etkinlik Ekle
+```http
+POST /api/admin/etkinlik
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "baslik": "Etkinlik Başlığı",
+  "aciklama": "Etkinlik açıklaması",
+  "fotograf": "https://supabase-url/etkinlikler/photo.jpg",
+  "adres": "Etkinlik adresi",
+  "zaman": "2024-12-31"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Etkinlik başarıyla eklendi.",
+  "id": 1
+}
+```
+
+### 9. Etkinlik Katılımcılarını Görüntüle
+```http
+GET /api/admin/etkinlik/{id}/katilimcilar
+Authorization: Bearer ADMIN_TOKEN
+```
+
+**Response:**
+```json
+{
+  "etkinlik": {
+    "id": 1,
+    "baslik": "Etkinlik Başlığı",
+    "zaman": "2024-12-31"
+  },
+  "katilimcilar": [
+    {
+      "id": 1,
+      "ad": "John",
+      "soyad": "Doe",
+      "email": "john@example.com",
+      "telefon": "05551234567",
+      "katilimTarihi": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "toplamKatilimci": 1
+}
+```
+
+---
+
+## 🚫 Hata Kodları
+
+| Kod | Açıklama | Örnek Durum |
+|-----|----------|-------------|
+| 200 | Başarılı | İşlem tamamlandı |
+| 400 | Geçersiz istek | Validation hatası, eksik alan |
+| 401 | Yetkisiz erişim | Token yok veya geçersiz |
+| 403 | Yasak | Yetki yok veya pasif üye |
+| 404 | Bulunamadı | Kayıt bulunamadı |
+| 500 | Sunucu hatası | Veritabanı hatası |
+
+---
+
+## 💡 Örnek Kullanım Senaryoları
+
+### Senaryo 1: Üyelik Başvurusu (Fotoğraflı)
+```javascript
+// 1. Profil fotoğrafı yükle
+const uploadPhoto = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', 'profil_fotolari');
+  
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token },
+    body: formData
+  });
+  
+  return await response.json();
+};
+
+// 2. Başvuru yap
+const submitApplication = async (applicationData, photoFile) => {
+  let photoUrl = null;
+  
+  if (photoFile) {
+    const uploadResult = await uploadPhoto(photoFile);
+    photoUrl = uploadResult.url;
+  }
+  
+  const response = await fetch('/api/uyelik-basvurusu', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...applicationData,
+      fotograf: photoUrl
+    })
+  });
+  
+  return await response.json();
+};
+```
+
+### Senaryo 2: Login ve Profil Görüntüleme
+```javascript
+// 1. Login
+const login = async (email, password) => {
+  const response = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, sifre: password })
+  });
+  
+  const result = await response.json();
+  
+  if (response.ok) {
+    localStorage.setItem('token', result.token);
+    localStorage.setItem('userType', result.userType);
+    return result;
+  } else {
+    throw new Error(result.message);
+  }
+};
+
+// 2. Profil bilgilerini al
+const getProfile = async () => {
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/profile', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  
+  return await response.json();
+};
+```
+
+### Senaryo 3: Etkinlik Katılımı
+```javascript
+// 1. Etkinlikleri listele
+const getEvents = async () => {
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/etkinlikler', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  
+  return await response.json();
+};
+
+// 2. Etkinliğe katıl
+const joinEvent = async (eventId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/etkinlik/katil', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ etkinlikId: eventId })
+  });
+  
+  return await response.json();
+};
+
+// 3. Etkinlikten ayrıl
+const leaveEvent = async (eventId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`/api/etkinlik/${eventId}/ayril`, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  
+  return await response.json();
+};
+```
+
+### Senaryo 4: Admin İşlemleri
+```javascript
+// 1. Bekleyen başvuruları listele
+const getPendingApplications = async () => {
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/admin/basvurular', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  
+  return await response.json();
+};
+
+// 2. Başvuruyu onayla
+const approveApplication = async (applicationId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/admin/basvuru-karar', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      basvuruId: applicationId,
+      karar: 'onayla'
+    })
+  });
+  
+  return await response.json();
+};
+
+// 3. Üye durumunu değiştir
+const toggleMemberStatus = async (memberId, status) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/admin/uye-status', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      uyeId: memberId,
+      status: status
+    })
+  });
+  
+  return await response.json();
+};
+```
+
+### Senaryo 5: İçerik Yönetimi (Admin)
+```javascript
+// 1. Etkinlik fotoğrafı yükle ve etkinlik ekle
+const addEventWithPhoto = async (eventData, photoFile) => {
+  const token = localStorage.getItem('token');
+  
+  // Fotoğraf yükle
+  const formData = new FormData();
+  formData.append('file', photoFile);
+  formData.append('folder', 'etkinlikler');
+  
+  const uploadResponse = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token },
+    body: formData
+  });
+  
+  const uploadResult = await uploadResponse.json();
+  
+  // Etkinlik ekle
+  const eventResponse = await fetch('/api/admin/etkinlik', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      ...eventData,
+      fotograf: uploadResult.url
+    })
+  });
+  
+  return await eventResponse.json();
+};
+```
+
+---
+
+## 🔒 Güvenlik Notları
+
+1. **Token Yönetimi:**
+   - JWT token'ları localStorage'da saklayın
+   - Token süresi dolduğunda yeniden login yapın
+   - Logout'ta token'ı temizleyin
+
+2. **Pasif Üye Kontrolü:**
+   - Pasif üyeler giriş yapamaz
+   - Pasif üyeler içerikleri görüntüleyemez
+   - Status değişikliği sadece admin tarafından yapılabilir
+
+3. **Dosya Yükleme:**
+   - Sadece resim dosyaları kabul edilir
+   - Maksimum 5MB boyut sınırı
+   - Dosya adları otomatik olarak benzersiz yapılır
+
+4. **Etkinlik Kuralları:**
+   - Geçmiş etkinliklere katılım yapılamaz
+   - Etkinlik tarihi geçmişse otomatik olarak status: false yapılır
+   - Bir etkinliğe sadece bir kez katılım yapılabilir
+
+---
+
+## 📱 Swagger UI
+Canlı API dokümantasyonu ve test için:
+```
+http://localhost:5166/swagger/index.html
+```
+
+---
+
+## 🤝 Destek
+
+Herhangi bir sorunuz olursa backend ekibiyle iletişime geçin.
+
+**Son Güncelleme:** 2024-01-01
+**API Versiyonu:** v1.0
