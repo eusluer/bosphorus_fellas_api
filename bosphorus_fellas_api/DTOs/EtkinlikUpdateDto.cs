@@ -20,7 +20,7 @@ public class EtkinlikUpdateDto
     public string Adres { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Zaman alanı zorunludur.")]
-    public DateOnly Zaman { get; set; }
+    public DateTime Zaman { get; set; }
 
     [Required(ErrorMessage = "Status alanı zorunludur.")]
     public bool Status { get; set; } = true;

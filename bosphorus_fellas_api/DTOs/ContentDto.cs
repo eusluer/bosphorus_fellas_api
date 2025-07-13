@@ -59,7 +59,7 @@ public class EtkinlikDto
     public string Adres { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Zaman alanı zorunludur")]
-    public DateOnly Zaman { get; set; }
+    public DateTime Zaman { get; set; }
 }
 
 public class EtkinlikListeDto
@@ -69,7 +69,7 @@ public class EtkinlikListeDto
     public string Aciklama { get; set; } = string.Empty;
     public string? Fotograf { get; set; }
     public string Adres { get; set; } = string.Empty;
-    public DateOnly Zaman { get; set; }
+    public DateTime Zaman { get; set; }
     public bool Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public int KatilimciSayisi { get; set; }

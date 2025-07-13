@@ -31,7 +31,7 @@ public class Etkinlik
 
     [Required]
     [Column("zaman")]
-    public DateOnly Zaman { get; set; }
+    public DateTime Zaman { get; set; }
 
     [Required]
     [Column("status")]
