@@ -1690,4 +1690,80 @@ app.MapPut("/api/admin/etkinlik/{id}", async (int id, [FromBody] EtkinlikUpdateD
 .WithOpenApi()
 .WithTags("Admin");
 
+// Haber detayını getirme (Admin)
+app.MapGet("/api/admin/haber/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    if (userType != "admin")
+    {
+        logger.LogWarning("Unauthorized access attempt to admin haber detail endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+    try
+    {
+        var haber = await context.Haberler.FirstOrDefaultAsync(h => h.Id == id);
+        if (haber == null)
+        {
+            logger.LogWarning("Haber not found with ID: {HaberId}", id);
+            return Results.NotFound(new { message = "Haber bulunamadı." });
+        }
+        var haberDetay = new {
+            id = haber.Id,
+            baslik = haber.Baslik,
+            aciklama = haber.Aciklama,
+            fotograf = haber.Fotograf,
+            createdAt = haber.CreatedAt
+        };
+        logger.LogInformation("Haber detail retrieved successfully for haber ID: {HaberId}", id);
+        return Results.Ok(haberDetay);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error retrieving haber detail for haber ID: {HaberId}", id);
+        return Results.Problem(detail: $"Haber detayı getirilirken bir hata oluştu: {ex.Message}", statusCode: 500);
+    }
+})
+.RequireAuthorization()
+.WithName("GetHaberById")
+.WithOpenApi()
+.WithTags("Admin");
+
+// Sponsor detayını getirme (Admin)
+app.MapGet("/api/admin/sponsor/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    if (userType != "admin")
+    {
+        logger.LogWarning("Unauthorized access attempt to admin sponsor detail endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+    try
+    {
+        var sponsor = await context.Sponsorlar.FirstOrDefaultAsync(s => s.Id == id);
+        if (sponsor == null)
+        {
+            logger.LogWarning("Sponsor not found with ID: {SponsorId}", id);
+            return Results.NotFound(new { message = "Sponsor bulunamadı." });
+        }
+        var sponsorDetay = new {
+            id = sponsor.Id,
+            baslik = sponsor.Baslik,
+            icerik = sponsor.Icerik,
+            fotograf = sponsor.Fotograf,
+            createdAt = sponsor.CreatedAt
+        };
+        logger.LogInformation("Sponsor detail retrieved successfully for sponsor ID: {SponsorId}", id);
+        return Results.Ok(sponsorDetay);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error retrieving sponsor detail for sponsor ID: {SponsorId}", id);
+        return Results.Problem(detail: $"Sponsor detayı getirilirken bir hata oluştu: {ex.Message}", statusCode: 500);
+    }
+})
+.RequireAuthorization()
+.WithName("GetSponsorById")
+.WithOpenApi()
+.WithTags("Admin");
+
 app.Run();
