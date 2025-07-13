@@ -1766,4 +1766,24 @@ app.MapGet("/api/admin/sponsor/{id}", async (int id, ApplicationDbContext contex
 .WithOpenApi()
 .WithTags("İçerik");
 
+// Landing page için etkinlik adı ve adresi dönen endpoint (herkese açık)
+app.MapGet("/api/landing-page-etkinlikler", async (ApplicationDbContext context) =>
+{
+    var etkinlikler = await context.Etkinlikler
+        .Where(e => e.Status == true)
+        .OrderByDescending(e => e.CreatedAt)
+        .Select(e => new bosphorus_fellas_api.DTOs.LandingPageEtkinlikDto
+        {
+            Id = e.Id,
+            Baslik = e.Baslik,
+            Adres = e.Adres
+        })
+        .ToListAsync();
+
+    return Results.Ok(etkinlikler);
+})
+.WithName("LandingPageEtkinlikler")
+.WithOpenApi()
+.WithTags("LandingPage");
+
 app.Run();

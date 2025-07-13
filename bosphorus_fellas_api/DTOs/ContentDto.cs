@@ -112,4 +112,11 @@ public class EtkinlikKatilimciDto
     public string Email { get; set; } = string.Empty;
     public string Telefon { get; set; } = string.Empty;
     public DateTime KatilimTarihi { get; set; }
+}
+
+public class LandingPageEtkinlikDto
+{
+    public int Id { get; set; }
+    public string Baslik { get; set; } = string.Empty;
+    public string Adres { get; set; } = string.Empty;
 } 
