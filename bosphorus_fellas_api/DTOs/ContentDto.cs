@@ -44,6 +44,28 @@ public class HaberListeDto
     public DateTime CreatedAt { get; set; }
 }
 
+public class HaberUpdateDto
+{
+    [Required(ErrorMessage = "Başlık alanı zorunludur")]
+    public string Baslik { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Açıklama alanı zorunludur")]
+    public string Aciklama { get; set; } = string.Empty;
+
+    public string? Fotograf { get; set; }
+}
+
+public class SponsorUpdateDto
+{
+    [Required(ErrorMessage = "Başlık alanı zorunludur")]
+    public string Baslik { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "İçerik alanı zorunludur")]
+    public string Icerik { get; set; } = string.Empty;
+
+    public string? Fotograf { get; set; }
+}
+
 // Etkinlik DTO'ları
 public class EtkinlikDto
 {

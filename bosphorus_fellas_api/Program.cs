@@ -1031,6 +1031,94 @@ app.MapPost("/api/admin/haber", async (HaberDto dto, ApplicationDbContext contex
 .WithOpenApi()
 .WithTags("Admin");
 
+// Haber güncelleme (Admin)
+app.MapPut("/api/admin/haber/{id}", async (int id, [FromBody] HaberUpdateDto dto, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    if (userType != "admin")
+    {
+        logger.LogWarning("Unauthorized access attempt to admin haber update endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(dto);
+    if (!Validator.TryValidateObject(dto, validationContext, validationResults, true))
+    {
+        var errors = validationResults.Select(v => v.ErrorMessage).ToList();
+        return Results.BadRequest(new { errors });
+    }
+
+    try
+    {
+        var haber = await context.Haberler.FirstOrDefaultAsync(h => h.Id == id);
+        if (haber == null)
+        {
+            logger.LogWarning("Haber not found with ID: {HaberId}", id);
+            return Results.NotFound(new { message = "Haber bulunamadı." });
+        }
+        haber.Baslik = dto.Baslik;
+        haber.Aciklama = dto.Aciklama;
+        haber.Fotograf = dto.Fotograf;
+        await context.SaveChangesAsync();
+        logger.LogInformation("Haber updated successfully for haber ID: {HaberId}", id);
+        return Results.Ok(new { message = "Haber başarıyla güncellendi.", haberId = haber.Id });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error updating haber for haber ID: {HaberId}", id);
+        return Results.Problem(detail: $"Haber güncellenirken bir hata oluştu: {ex.Message}", statusCode: 500);
+    }
+})
+.RequireAuthorization()
+.WithName("UpdateHaberById")
+.WithOpenApi()
+.WithTags("Admin");
+
+// Sponsor güncelleme (Admin)
+app.MapPut("/api/admin/sponsor/{id}", async (int id, [FromBody] SponsorUpdateDto dto, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    if (userType != "admin")
+    {
+        logger.LogWarning("Unauthorized access attempt to admin sponsor update endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(dto);
+    if (!Validator.TryValidateObject(dto, validationContext, validationResults, true))
+    {
+        var errors = validationResults.Select(v => v.ErrorMessage).ToList();
+        return Results.BadRequest(new { errors });
+    }
+
+    try
+    {
+        var sponsor = await context.Sponsorlar.FirstOrDefaultAsync(s => s.Id == id);
+        if (sponsor == null)
+        {
+            logger.LogWarning("Sponsor not found with ID: {SponsorId}", id);
+            return Results.NotFound(new { message = "Sponsor bulunamadı." });
+        }
+        sponsor.Baslik = dto.Baslik;
+        sponsor.Icerik = dto.Icerik;
+        sponsor.Fotograf = dto.Fotograf;
+        await context.SaveChangesAsync();
+        logger.LogInformation("Sponsor updated successfully for sponsor ID: {SponsorId}", id);
+        return Results.Ok(new { message = "Sponsor başarıyla güncellendi.", sponsorId = sponsor.Id });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error updating sponsor for sponsor ID: {SponsorId}", id);
+        return Results.Problem(detail: $"Sponsor güncellenirken bir hata oluştu: {ex.Message}", statusCode: 500);
+    }
+})
+.RequireAuthorization()
+.WithName("UpdateSponsorById")
+.WithOpenApi()
+.WithTags("Admin");
+
 // ETKİNLİK YÖNETİMİ - Admin Endpoint'leri
 
 // Etkinlik ekleme (Admin)
