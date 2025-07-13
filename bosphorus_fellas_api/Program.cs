@@ -1570,15 +1570,15 @@ app.MapGet("/api/admin/etkinlik/{id}", async (int id, ApplicationDbContext conte
     var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     
     // Sadece admin kullanıcılar erişebilir
-    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    if ((userType != "admin" && userType != "uye") || string.IsNullOrEmpty(adminId))
     {
-        logger.LogWarning("Unauthorized access attempt to admin endpoint by user type: {UserType}", userType);
+        logger.LogWarning("Unauthorized access attempt to etkinlik detail endpoint by user type: {UserType}", userType);
         return Results.Forbid();
     }
 
     try
     {
-        logger.LogInformation("Admin {AdminId} requesting event information for event ID: {EventId}", adminId, id);
+        logger.LogInformation("User {UserId} requesting event information for event ID: {EventId}", adminId, id);
         
         // Etkinlik bilgilerini getir
         var etkinlik = await context.Etkinlikler.FirstOrDefaultAsync(e => e.Id == id);
@@ -1622,7 +1622,7 @@ app.MapGet("/api/admin/etkinlik/{id}", async (int id, ApplicationDbContext conte
 .RequireAuthorization()
 .WithName("GetEventById")
 .WithOpenApi()
-.WithTags("Admin");
+.WithTags("İçerik");
 
 // Admin: Etkinlik bilgilerini güncelleme endpoint'i
 app.MapPut("/api/admin/etkinlik/{id}", async (int id, [FromBody] EtkinlikUpdateDto dto, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
@@ -1690,13 +1690,13 @@ app.MapPut("/api/admin/etkinlik/{id}", async (int id, [FromBody] EtkinlikUpdateD
 .WithOpenApi()
 .WithTags("Admin");
 
-// Haber detayını getirme (Admin)
+// Haber detayını getirme (Admin ve Üye)
 app.MapGet("/api/admin/haber/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
 {
     var userType = httpContext.User.FindFirst("UserType")?.Value;
-    if (userType != "admin")
+    if (userType != "admin" && userType != "uye")
     {
-        logger.LogWarning("Unauthorized access attempt to admin haber detail endpoint by user type: {UserType}", userType);
+        logger.LogWarning("Unauthorized access attempt to haber detail endpoint by user type: {UserType}", userType);
         return Results.Forbid();
     }
     try
@@ -1726,15 +1726,15 @@ app.MapGet("/api/admin/haber/{id}", async (int id, ApplicationDbContext context,
 .RequireAuthorization()
 .WithName("GetHaberById")
 .WithOpenApi()
-.WithTags("Admin");
+.WithTags("İçerik");
 
-// Sponsor detayını getirme (Admin)
+// Sponsor detayını getirme (Admin ve Üye)
 app.MapGet("/api/admin/sponsor/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
 {
     var userType = httpContext.User.FindFirst("UserType")?.Value;
-    if (userType != "admin")
+    if (userType != "admin" && userType != "uye")
     {
-        logger.LogWarning("Unauthorized access attempt to admin sponsor detail endpoint by user type: {UserType}", userType);
+        logger.LogWarning("Unauthorized access attempt to sponsor detail endpoint by user type: {UserType}", userType);
         return Results.Forbid();
     }
     try
@@ -1764,6 +1764,6 @@ app.MapGet("/api/admin/sponsor/{id}", async (int id, ApplicationDbContext contex
 .RequireAuthorization()
 .WithName("GetSponsorById")
 .WithOpenApi()
-.WithTags("Admin");
+.WithTags("İçerik");
 
 app.Run();
