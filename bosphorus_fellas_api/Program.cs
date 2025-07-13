@@ -12,7 +12,7 @@ using bosphorus_fellas_api.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Railway için port yapılandırması
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5050";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Add services to the container.
@@ -1403,5 +1403,76 @@ app.MapDelete("/api/etkinlik/{id}/ayril", async (int id, ApplicationDbContext co
 .WithName("EtkinliktenAyril")
 .WithOpenApi()
 .WithTags("İçerik");
+
+// Admin: Üye bilgilerini ID'ye göre getirme endpoint'i
+app.MapGet("/api/admin/uye/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece admin kullanıcılar erişebilir
+    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    {
+        logger.LogWarning("Unauthorized access attempt to admin endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    try
+    {
+        logger.LogInformation("Admin {AdminId} requesting member information for member ID: {MemberId}", adminId, id);
+        
+        // Üye bilgilerini getir
+        var uye = await context.Uyeler.FirstOrDefaultAsync(u => u.Id == id);
+        
+        if (uye == null)
+        {
+            logger.LogWarning("Member not found with ID: {MemberId}", id);
+            return Results.NotFound(new { message = "Üye bulunamadı." });
+        }
+
+        // Üye bilgilerini döndür (şifre hariç)
+        var uyeBilgileri = new
+        {
+            id = uye.Id,
+            ad = uye.Ad,
+            soyad = uye.Soyad,
+            email = uye.Email,
+            telefon = uye.Telefon,
+            dogumTarihi = uye.DogumTarihi,
+            sehir = uye.Sehir,
+            instagram = uye.Instagram,
+            adres = uye.Adres,
+            aracMarka = uye.AracMarka,
+            aracModel = uye.AracModel,
+            aracYili = uye.AracYili,
+            plaka = uye.Plaka,
+            deneyim = uye.Deneyim,
+            ilgiAlanlari = uye.IlgiAlanlari,
+            acilDurumKisi = uye.AcilDurumKisi,
+            acilDurumTelefon = uye.AcilDurumTelefon,
+            uyelikSartlari = uye.UyelikSartlari,
+            kisiselVeri = uye.KisiselVeri,
+            emailBildirim = uye.EmailBildirim,
+            status = uye.Status,
+            fotograf = uye.Fotograf,
+            createdAt = uye.CreatedAt
+        };
+
+        logger.LogInformation("Member information retrieved successfully for member ID: {MemberId}", id);
+        return Results.Ok(uyeBilgileri);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error retrieving member information for member ID: {MemberId}", id);
+        return Results.Problem(
+            detail: $"Üye bilgileri getirilirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("GetMemberById")
+.WithOpenApi()
+.WithTags("Admin");
 
 app.Run();
