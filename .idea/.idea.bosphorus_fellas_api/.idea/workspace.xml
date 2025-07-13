@@ -29,7 +29,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    ".NET Launch Settings Profile.bosphorus_fellas_api: http.executor": "Run",
+    ".NET Launch Settings Profile.bosphorus_fellas_api: http.executor": "Debug",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
     "node.js.detected.package.eslint": "true",
@@ -105,7 +105,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1752344686592</updated>
-      <workItem from="1752344688102" duration="6748000" />
+      <workItem from="1752344688102" duration="9130000" />
     </task>
     <servers />
   </component>

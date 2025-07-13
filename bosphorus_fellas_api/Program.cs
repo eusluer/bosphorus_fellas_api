@@ -1475,4 +1475,131 @@ app.MapGet("/api/admin/uye/{id}", async (int id, ApplicationDbContext context, H
 .WithOpenApi()
 .WithTags("Admin");
 
+// Admin: Etkinlik bilgilerini ID'ye göre getirme endpoint'i
+app.MapGet("/api/admin/etkinlik/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece admin kullanıcılar erişebilir
+    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    {
+        logger.LogWarning("Unauthorized access attempt to admin endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    try
+    {
+        logger.LogInformation("Admin {AdminId} requesting event information for event ID: {EventId}", adminId, id);
+        
+        // Etkinlik bilgilerini getir
+        var etkinlik = await context.Etkinlikler.FirstOrDefaultAsync(e => e.Id == id);
+        
+        if (etkinlik == null)
+        {
+            logger.LogWarning("Event not found with ID: {EventId}", id);
+            return Results.NotFound(new { message = "Etkinlik bulunamadı." });
+        }
+
+        // Katılımcı sayısını hesapla
+        var katilimciSayisi = await context.EtkinlikKatilimcilari
+            .CountAsync(ek => ek.EtkinlikId == id);
+
+        // Etkinlik bilgilerini döndür
+        var etkinlikBilgileri = new
+        {
+            id = etkinlik.Id,
+            baslik = etkinlik.Baslik,
+            aciklama = etkinlik.Aciklama,
+            fotograf = etkinlik.Fotograf,
+            adres = etkinlik.Adres,
+            zaman = etkinlik.Zaman,
+            status = etkinlik.Status,
+            createdAt = etkinlik.CreatedAt,
+            katilimciSayisi = katilimciSayisi
+        };
+
+        logger.LogInformation("Event information retrieved successfully for event ID: {EventId}", id);
+        return Results.Ok(etkinlikBilgileri);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error retrieving event information for event ID: {EventId}", id);
+        return Results.Problem(
+            detail: $"Etkinlik bilgileri getirilirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("GetEventById")
+.WithOpenApi()
+.WithTags("Admin");
+
+// Admin: Etkinlik bilgilerini güncelleme endpoint'i
+app.MapPut("/api/admin/etkinlik/{id}", async (int id, [FromBody] EtkinlikUpdateDto dto, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece admin kullanıcılar erişebilir
+    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    {
+        logger.LogWarning("Unauthorized access attempt to admin endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    // Validation
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(dto);
+    
+    if (!Validator.TryValidateObject(dto, validationContext, validationResults, true))
+    {
+        var errors = validationResults.Select(v => v.ErrorMessage).ToList();
+        return Results.BadRequest(new { errors });
+    }
+
+    try
+    {
+        logger.LogInformation("Admin {AdminId} updating event information for event ID: {EventId}", adminId, id);
+        
+        // Etkinlik var mı kontrol et
+        var etkinlik = await context.Etkinlikler.FirstOrDefaultAsync(e => e.Id == id);
+        
+        if (etkinlik == null)
+        {
+            logger.LogWarning("Event not found with ID: {EventId}", id);
+            return Results.NotFound(new { message = "Etkinlik bulunamadı." });
+        }
+
+        // Etkinlik bilgilerini güncelle
+        etkinlik.Baslik = dto.Baslik;
+        etkinlik.Aciklama = dto.Aciklama;
+        etkinlik.Fotograf = dto.Fotograf;
+        etkinlik.Adres = dto.Adres;
+        etkinlik.Zaman = dto.Zaman;
+        etkinlik.Status = dto.Status;
+
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Event updated successfully for event ID: {EventId}", id);
+        return Results.Ok(new { 
+            message = "Etkinlik başarıyla güncellendi.",
+            etkinlikId = etkinlik.Id
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error updating event information for event ID: {EventId}", id);
+        return Results.Problem(
+            detail: $"Etkinlik güncellenirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("UpdateEventById")
+.WithOpenApi()
+.WithTags("Admin");
+
 app.Run();
