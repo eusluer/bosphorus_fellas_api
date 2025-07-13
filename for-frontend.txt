@@ -8,8 +8,9 @@
 5. [İçerik Görüntüleme](#içerik-görüntüleme)
 6. [Etkinlik İşlemleri](#etkinlik-işlemleri)
 7. [Admin İşlemleri](#admin-işlemleri)
-8. [Hata Kodları](#hata-kodları)
-9. [Örnek Kullanım Senaryoları](#örnek-kullanım-senaryoları)
+8. [Haber & Sponsor Detay ve Güncelleme](#haber-sponsor-detay-ve-guncelleme)
+9. [Hata Kodları](#hata-kodları)
+10. [Örnek Kullanım Senaryoları](#ornek-kullanim-senaryolari)
 
 ---
 
@@ -44,7 +45,6 @@ Content-Type: application/json
   "sifre": "password123"
 }
 ```
-
 **Response (Başarılı):**
 ```json
 {
@@ -57,7 +57,6 @@ Content-Type: application/json
   "expiresAt": "2024-01-01T12:00:00Z"
 }
 ```
-
 **Response (Hata):**
 ```json
 {
@@ -65,15 +64,11 @@ Content-Type: application/json
 }
 ```
 
-**Özel Durumlar:**
-- Pasif üye: `"Üyeliğiniz pasif duruma getirilmiştir. Lütfen yöneticiye başvurunuz."`
-
 ### 2. Profil Bilgileri
 ```http
 GET /api/profile
 Authorization: Bearer TOKEN
 ```
-
 **Response (Admin):**
 ```json
 {
@@ -85,7 +80,6 @@ Authorization: Bearer TOKEN
   "createdAt": "2024-01-01T00:00:00Z"
 }
 ```
-
 **Response (Üye):**
 ```json
 {
@@ -136,9 +130,6 @@ Content-Type: application/json
   "fotograf": "https://supabase-url/profil_fotolari/new-photo.jpg"
 }
 ```
-
-**Not:** Tüm alanlar opsiyonel. Sadece güncellemek istediğiniz alanları gönderin.
-
 **Response:**
 ```json
 {
@@ -160,7 +151,6 @@ Form Data:
 - file: [IMAGE_FILE]
 - folder: "profil_fotolari" // veya "etkinlikler", "haberler", "sponsorlu"
 ```
-
 **Response:**
 ```json
 {
@@ -170,11 +160,6 @@ Form Data:
   "fileSize": 1024000
 }
 ```
-
-**Kısıtlamalar:**
-- Maksimum dosya boyutu: 5MB
-- Desteklenen formatlar: JPEG, PNG, GIF, WebP
-- Klasörler: `profil_fotolari`, `etkinlikler`, `haberler`, `sponsorlu`
 
 ### 2. Fotoğraf Silme
 ```http
@@ -186,7 +171,6 @@ Content-Type: application/json
   "filePath": "profil_fotolari/abc123.jpg"
 }
 ```
-
 **Response:**
 ```json
 {
@@ -227,7 +211,6 @@ Content-Type: application/json
   "fotograf": "https://supabase-url/profil_fotolari/abc123.jpg"
 }
 ```
-
 **Response:**
 ```json
 {
@@ -241,7 +224,6 @@ Content-Type: application/json
 ```http
 GET /api/uyelik-basvurusu/{id}
 ```
-
 **Response:**
 ```json
 {
@@ -256,14 +238,13 @@ GET /api/uyelik-basvurusu/{id}
 
 ---
 
-## 📰 İçerik Görüntüleme (Sadece Giriş Yapmış Kullanıcılar)
+## 📰 İçerik Görüntüleme (Giriş Yapmış Herkes)
 
 ### 1. Sponsorları Listele
 ```http
 GET /api/sponsorlar
 Authorization: Bearer TOKEN
 ```
-
 **Response:**
 ```json
 [
@@ -282,7 +263,6 @@ Authorization: Bearer TOKEN
 GET /api/haberler
 Authorization: Bearer TOKEN
 ```
-
 **Response:**
 ```json
 [
@@ -301,7 +281,6 @@ Authorization: Bearer TOKEN
 GET /api/etkinlikler
 Authorization: Bearer TOKEN
 ```
-
 **Response:**
 ```json
 [
@@ -311,13 +290,65 @@ Authorization: Bearer TOKEN
     "aciklama": "Etkinlik açıklaması",
     "fotograf": "https://supabase-url/etkinlikler/photo.jpg",
     "adres": "Etkinlik adresi",
-    "zaman": "2024-12-31",
+    "zaman": "2024-12-31T20:00:00Z",
     "status": true,
     "createdAt": "2024-01-01T00:00:00Z",
     "katilimciSayisi": 15,
-    "katilimDurumu": false // Kullanıcının katılım durumu
+    "katilimDurumu": false
   }
 ]
+```
+
+### 4. Sponsor Detay (Giriş Yapmış Herkes)
+```http
+GET /api/admin/sponsor/{id}
+Authorization: Bearer TOKEN
+```
+**Response:**
+```json
+{
+  "id": 1,
+  "baslik": "Sponsor Başlığı",
+  "icerik": "Sponsor içerik detayları",
+  "fotograf": "https://supabase-url/sponsorlu/photo.jpg",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+```
+
+### 5. Haber Detay (Giriş Yapmış Herkes)
+```http
+GET /api/admin/haber/{id}
+Authorization: Bearer TOKEN
+```
+**Response:**
+```json
+{
+  "id": 1,
+  "baslik": "Haber Başlığı",
+  "aciklama": "Haber içerik detayları",
+  "fotograf": "https://supabase-url/haberler/photo.jpg",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+```
+
+### 6. Etkinlik Detay (Giriş Yapmış Herkes)
+```http
+GET /api/admin/etkinlik/{id}
+Authorization: Bearer TOKEN
+```
+**Response:**
+```json
+{
+  "id": 1,
+  "baslik": "Etkinlik Başlığı",
+  "aciklama": "Etkinlik açıklaması",
+  "fotograf": "https://supabase-url/etkinlikler/photo.jpg",
+  "adres": "Etkinlik adresi",
+  "zaman": "2024-12-31T20:00:00Z",
+  "status": true,
+  "createdAt": "2024-01-01T00:00:00Z",
+  "katilimciSayisi": 15
+}
 ```
 
 ---
@@ -334,7 +365,6 @@ Content-Type: application/json
   "etkinlikId": 1
 }
 ```
-
 **Response:**
 ```json
 {
@@ -348,11 +378,77 @@ Content-Type: application/json
 DELETE /api/etkinlik/{id}/ayril
 Authorization: Bearer TOKEN
 ```
-
 **Response:**
 ```json
 {
   "message": "Etkinlikten başarıyla ayrıldınız."
+}
+```
+
+---
+
+## 🛠️ Haber & Sponsor Detay ve Güncelleme
+
+### 1. Haber Güncelle (Admin)
+```http
+PUT /api/admin/haber/{id}
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "baslik": "Yeni Başlık",
+  "aciklama": "Yeni açıklama",
+  "fotograf": "https://supabase-url/haberler/new-photo.jpg"
+}
+```
+**Response:**
+```json
+{
+  "message": "Haber başarıyla güncellendi.",
+  "haberId": 1
+}
+```
+
+### 2. Sponsor Güncelle (Admin)
+```http
+PUT /api/admin/sponsor/{id}
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "baslik": "Yeni Başlık",
+  "icerik": "Yeni içerik",
+  "fotograf": "https://supabase-url/sponsorlu/new-photo.jpg"
+}
+```
+**Response:**
+```json
+{
+  "message": "Sponsor başarıyla güncellendi.",
+  "sponsorId": 1
+}
+```
+
+### 3. Etkinlik Güncelle (Admin)
+```http
+PUT /api/admin/etkinlik/{id}
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "baslik": "Yeni Başlık",
+  "aciklama": "Yeni açıklama",
+  "fotograf": "https://supabase-url/etkinlikler/new-photo.jpg",
+  "adres": "Yeni adres",
+  "zaman": "2024-12-31T20:00:00Z",
+  "status": true
+}
+```
+**Response:**
+```json
+{
+  "message": "Etkinlik başarıyla güncellendi.",
+  "etkinlikId": 1
 }
 ```
 
@@ -365,7 +461,6 @@ Authorization: Bearer TOKEN
 GET /api/admin/basvurular
 Authorization: Bearer ADMIN_TOKEN
 ```
-
 **Response:**
 ```json
 [
@@ -388,7 +483,6 @@ Authorization: Bearer ADMIN_TOKEN
 GET /api/admin/basvuru/{id}
 Authorization: Bearer ADMIN_TOKEN
 ```
-
 **Response:**
 ```json
 {
@@ -431,7 +525,6 @@ Content-Type: application/json
   "reddetmeNedeni": "İsteğe bağlı reddetme nedeni"
 }
 ```
-
 **Response (Onay):**
 ```json
 {
@@ -440,7 +533,6 @@ Content-Type: application/json
   "geciciSifre": "123456"
 }
 ```
-
 **Response (Red):**
 ```json
 {
@@ -454,7 +546,6 @@ Content-Type: application/json
 GET /api/admin/uyeler
 Authorization: Bearer ADMIN_TOKEN
 ```
-
 **Response:**
 ```json
 [
@@ -483,7 +574,6 @@ Content-Type: application/json
   "status": false // true: aktif, false: pasif
 }
 ```
-
 **Response:**
 ```json
 {
@@ -505,7 +595,6 @@ Content-Type: application/json
   "fotograf": "https://supabase-url/sponsorlu/photo.jpg"
 }
 ```
-
 **Response:**
 ```json
 {
@@ -526,7 +615,6 @@ Content-Type: application/json
   "fotograf": "https://supabase-url/haberler/photo.jpg"
 }
 ```
-
 **Response:**
 ```json
 {
@@ -546,10 +634,9 @@ Content-Type: application/json
   "aciklama": "Etkinlik açıklaması",
   "fotograf": "https://supabase-url/etkinlikler/photo.jpg",
   "adres": "Etkinlik adresi",
-  "zaman": "2024-12-31"
+  "zaman": "2024-12-31T20:00:00Z"
 }
 ```
-
 **Response:**
 ```json
 {
@@ -563,14 +650,13 @@ Content-Type: application/json
 GET /api/admin/etkinlik/{id}/katilimcilar
 Authorization: Bearer ADMIN_TOKEN
 ```
-
 **Response:**
 ```json
 {
   "etkinlik": {
     "id": 1,
     "baslik": "Etkinlik Başlığı",
-    "zaman": "2024-12-31"
+    "zaman": "2024-12-31T20:00:00Z"
   },
   "katilimcilar": [
     {

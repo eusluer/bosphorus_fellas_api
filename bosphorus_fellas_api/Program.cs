@@ -1140,7 +1140,7 @@ app.MapPost("/api/admin/etkinlik", async (EtkinlikDto dto, ApplicationDbContext 
     }
 
     // Etkinlik tarihi kontrolü
-    if (dto.Zaman < DateTime.Now)
+    if (dto.Zaman < DateTime.UtcNow)
     {
         return Results.BadRequest(new { message = "Etkinlik tarihi bugünden sonra olmalıdır." });
     }
@@ -1318,7 +1318,7 @@ app.MapGet("/api/etkinlikler", async (ApplicationDbContext context, HttpContext 
             return Results.Forbid();
         }
     }
-    var now = DateTime.Now;
+    var now = DateTime.UtcNow;
 
     // Etkinlik status'unu güncelle (geçmiş etkinlikler)
     var pastEvents = await context.Etkinlikler
@@ -1395,7 +1395,7 @@ app.MapPost("/api/etkinlik/katil", async (EtkinlikKatilimDto dto, ApplicationDbC
     }
 
     // Etkinlik tarihi kontrolü
-    if (etkinlik.Zaman < DateTime.Now)
+    if (etkinlik.Zaman < DateTime.UtcNow)
     {
         return Results.BadRequest(new { message = "Geçmiş etkinliklere katılım sağlanamaz." });
     }
@@ -1461,7 +1461,7 @@ app.MapDelete("/api/etkinlik/{id}/ayril", async (int id, ApplicationDbContext co
     }
 
     // Etkinlik tarihi kontrolü
-    if (etkinlik.Zaman < DateTime.Now)
+    if (etkinlik.Zaman < DateTime.UtcNow)
     {
         return Results.BadRequest(new { message = "Geçmiş etkinliklerden ayrılım sağlanamaz." });
     }
