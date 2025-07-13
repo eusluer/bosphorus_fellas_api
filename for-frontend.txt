@@ -137,6 +137,31 @@ Content-Type: application/json
 }
 ```
 
+### 4. Şifre Değiştirme (Üyeler)
+```http
+PUT /api/uye/sifre-degistir
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "mevcutSifre": "eski123",
+  "yeniSifre": "yeni456",
+  "yeniSifreTekrar": "yeni456"
+}
+```
+**Response:**
+```json
+{
+  "message": "Şifreniz başarıyla değiştirildi."
+}
+```
+**Hata Response:**
+```json
+{
+  "message": "Mevcut şifre yanlış."
+}
+```
+
 ---
 
 ## 📸 Dosya Yükleme
@@ -669,6 +694,31 @@ Authorization: Bearer ADMIN_TOKEN
     }
   ],
   "toplamKatilimci": 1
+}
+```
+
+### 10. Admin Şifre Değiştirme
+```http
+PUT /api/admin/sifre-degistir
+Authorization: Bearer ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "mevcutSifre": "eski123",
+  "yeniSifre": "yeni456",
+  "yeniSifreTekrar": "yeni456"
+}
+```
+**Response:**
+```json
+{
+  "message": "Şifreniz başarıyla değiştirildi."
+}
+```
+**Hata Response:**
+```json
+{
+  "message": "Mevcut şifre yanlış."
 }
 ```
 

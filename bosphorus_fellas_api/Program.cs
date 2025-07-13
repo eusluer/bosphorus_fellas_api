@@ -1786,4 +1786,158 @@ app.MapGet("/api/landing-page-etkinlikler", async (ApplicationDbContext context)
 .WithOpenApi()
 .WithTags("LandingPage");
 
+// Üye şifre değiştirme endpoint'i
+app.MapPut("/api/uye/sifre-degistir", async (SifreDegistirmeDto dto, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece üye kullanıcılar erişebilir
+    if (userType != "uye" || string.IsNullOrEmpty(userId))
+    {
+        logger.LogWarning("Unauthorized access attempt to password change endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    // Validation
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(dto);
+    
+    if (!Validator.TryValidateObject(dto, validationContext, validationResults, true))
+    {
+        var errors = validationResults.Select(v => v.ErrorMessage).ToList();
+        return Results.BadRequest(new { errors });
+    }
+
+    try
+    {
+        logger.LogInformation("Password change attempt for user ID: {UserId}", userId);
+        
+        // Üyeyi bul
+        var uye = await context.Uyeler.FirstOrDefaultAsync(u => u.Id == int.Parse(userId));
+        
+        if (uye == null)
+        {
+            logger.LogWarning("User not found with ID: {UserId}", userId);
+            return Results.NotFound(new { message = "Kullanıcı bulunamadı." });
+        }
+
+        // Mevcut şifreyi doğrula
+        bool isCurrentPasswordValid = false;
+        
+        if (uye.Sifre.StartsWith("$2"))
+        {
+            // BCrypt hash formatında, normal doğrulama yap
+            isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(dto.MevcutSifre, uye.Sifre);
+        }
+        else
+        {
+            // Düz metin şifre, direkt karşılaştır
+            isCurrentPasswordValid = uye.Sifre == dto.MevcutSifre;
+        }
+        
+        if (!isCurrentPasswordValid)
+        {
+            logger.LogWarning("Invalid current password for user ID: {UserId}", userId);
+            return Results.BadRequest(new { message = "Mevcut şifre yanlış." });
+        }
+
+        // Yeni şifreyi hash'le ve kaydet
+        uye.Sifre = BCrypt.Net.BCrypt.HashPassword(dto.YeniSifre);
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Password changed successfully for user ID: {UserId}", userId);
+        return Results.Ok(new { message = "Şifreniz başarıyla değiştirildi." });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error changing password for user ID: {UserId}", userId);
+        return Results.Problem(
+            detail: $"Şifre değiştirilirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("ChangePassword")
+.WithOpenApi()
+.WithTags("Üye");
+
+// Admin şifre değiştirme endpoint'i
+app.MapPut("/api/admin/sifre-degistir", async (SifreDegistirmeDto dto, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece admin kullanıcılar erişebilir
+    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    {
+        logger.LogWarning("Unauthorized access attempt to admin password change endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    // Validation
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(dto);
+    
+    if (!Validator.TryValidateObject(dto, validationContext, validationResults, true))
+    {
+        var errors = validationResults.Select(v => v.ErrorMessage).ToList();
+        return Results.BadRequest(new { errors });
+    }
+
+    try
+    {
+        logger.LogInformation("Admin password change attempt for admin ID: {AdminId}", adminId);
+        
+        // Admin'i bul
+        var admin = await context.Adminler.FirstOrDefaultAsync(a => a.Id == int.Parse(adminId));
+        
+        if (admin == null)
+        {
+            logger.LogWarning("Admin not found with ID: {AdminId}", adminId);
+            return Results.NotFound(new { message = "Admin bulunamadı." });
+        }
+
+        // Mevcut şifreyi doğrula
+        bool isCurrentPasswordValid = false;
+        
+        if (admin.Sifre.StartsWith("$2"))
+        {
+            // BCrypt hash formatında, normal doğrulama yap
+            isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(dto.MevcutSifre, admin.Sifre);
+        }
+        else
+        {
+            // Düz metin şifre, direkt karşılaştır
+            isCurrentPasswordValid = admin.Sifre == dto.MevcutSifre;
+        }
+        
+        if (!isCurrentPasswordValid)
+        {
+            logger.LogWarning("Invalid current password for admin ID: {AdminId}", adminId);
+            return Results.BadRequest(new { message = "Mevcut şifre yanlış." });
+        }
+
+        // Yeni şifreyi hash'le ve kaydet
+        admin.Sifre = BCrypt.Net.BCrypt.HashPassword(dto.YeniSifre);
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Admin password changed successfully for admin ID: {AdminId}", adminId);
+        return Results.Ok(new { message = "Şifreniz başarıyla değiştirildi." });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error changing admin password for admin ID: {AdminId}", adminId);
+        return Results.Problem(
+            detail: $"Şifre değiştirilirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("ChangeAdminPassword")
+.WithOpenApi()
+.WithTags("Admin");
+
 app.Run();
