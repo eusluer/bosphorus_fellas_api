@@ -722,6 +722,46 @@ Content-Type: application/json
 }
 ```
 
+### 11. Etkinlik Silme
+```http
+DELETE /api/admin/etkinlik/{id}
+Authorization: Bearer ADMIN_TOKEN
+```
+**Response:**
+```json
+{
+  "message": "Etkinlik başarıyla silindi.",
+  "etkinlikId": 1,
+  "silinenKatilimciSayisi": 5
+}
+```
+
+### 12. Haber Silme
+```http
+DELETE /api/admin/haber/{id}
+Authorization: Bearer ADMIN_TOKEN
+```
+**Response:**
+```json
+{
+  "message": "Haber başarıyla silindi.",
+  "haberId": 1
+}
+```
+
+### 13. Sponsor Silme
+```http
+DELETE /api/admin/sponsor/{id}
+Authorization: Bearer ADMIN_TOKEN
+```
+**Response:**
+```json
+{
+  "message": "Sponsor başarıyla silindi.",
+  "sponsorId": 1
+}
+```
+
 ---
 
 ## 🚫 Hata Kodları

@@ -1940,4 +1940,168 @@ app.MapPut("/api/admin/sifre-degistir", async (SifreDegistirmeDto dto, Applicati
 .WithOpenApi()
 .WithTags("Admin");
 
+// DELETE ENDPOINT'LERİ - Sadece admin kullanıcılar erişebilir
+
+// Etkinlik silme (Admin)
+app.MapDelete("/api/admin/etkinlik/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece admin kullanıcılar erişebilir
+    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    {
+        logger.LogWarning("Unauthorized access attempt to delete etkinlik endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    try
+    {
+        logger.LogInformation("Admin {AdminId} attempting to delete etkinlik with ID: {EtkinlikId}", adminId, id);
+        
+        // Etkinlik var mı kontrol et
+        var etkinlik = await context.Etkinlikler.FirstOrDefaultAsync(e => e.Id == id);
+        
+        if (etkinlik == null)
+        {
+            logger.LogWarning("Etkinlik not found with ID: {EtkinlikId}", id);
+            return Results.NotFound(new { message = "Etkinlik bulunamadı." });
+        }
+
+        // Etkinliğe katılım sağlayan üyeleri sil
+        var katilimcilar = await context.EtkinlikKatilimcilari
+            .Where(ek => ek.EtkinlikId == id)
+            .ToListAsync();
+
+        if (katilimcilar.Any())
+        {
+            context.EtkinlikKatilimcilari.RemoveRange(katilimcilar);
+            logger.LogInformation("Removed {Count} participants from etkinlik ID: {EtkinlikId}", katilimcilar.Count, id);
+        }
+
+        // Etkinliği sil
+        context.Etkinlikler.Remove(etkinlik);
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Etkinlik deleted successfully with ID: {EtkinlikId}", id);
+        return Results.Ok(new { 
+            message = "Etkinlik başarıyla silindi.",
+            etkinlikId = etkinlik.Id,
+            silinenKatilimciSayisi = katilimcilar.Count
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error deleting etkinlik with ID: {EtkinlikId}", id);
+        return Results.Problem(
+            detail: $"Etkinlik silinirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("DeleteEtkinlik")
+.WithOpenApi()
+.WithTags("Admin");
+
+// Haber silme (Admin)
+app.MapDelete("/api/admin/haber/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece admin kullanıcılar erişebilir
+    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    {
+        logger.LogWarning("Unauthorized access attempt to delete haber endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    try
+    {
+        logger.LogInformation("Admin {AdminId} attempting to delete haber with ID: {HaberId}", adminId, id);
+        
+        // Haber var mı kontrol et
+        var haber = await context.Haberler.FirstOrDefaultAsync(h => h.Id == id);
+        
+        if (haber == null)
+        {
+            logger.LogWarning("Haber not found with ID: {HaberId}", id);
+            return Results.NotFound(new { message = "Haber bulunamadı." });
+        }
+
+        // Haberi sil
+        context.Haberler.Remove(haber);
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Haber deleted successfully with ID: {HaberId}", id);
+        return Results.Ok(new { 
+            message = "Haber başarıyla silindi.",
+            haberId = haber.Id
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error deleting haber with ID: {HaberId}", id);
+        return Results.Problem(
+            detail: $"Haber silinirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("DeleteHaber")
+.WithOpenApi()
+.WithTags("Admin");
+
+// Sponsor silme (Admin)
+app.MapDelete("/api/admin/sponsor/{id}", async (int id, ApplicationDbContext context, HttpContext httpContext, ILogger<Program> logger) =>
+{
+    var userType = httpContext.User.FindFirst("UserType")?.Value;
+    var adminId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    
+    // Sadece admin kullanıcılar erişebilir
+    if (userType != "admin" || string.IsNullOrEmpty(adminId))
+    {
+        logger.LogWarning("Unauthorized access attempt to delete sponsor endpoint by user type: {UserType}", userType);
+        return Results.Forbid();
+    }
+
+    try
+    {
+        logger.LogInformation("Admin {AdminId} attempting to delete sponsor with ID: {SponsorId}", adminId, id);
+        
+        // Sponsor var mı kontrol et
+        var sponsor = await context.Sponsorlar.FirstOrDefaultAsync(s => s.Id == id);
+        
+        if (sponsor == null)
+        {
+            logger.LogWarning("Sponsor not found with ID: {SponsorId}", id);
+            return Results.NotFound(new { message = "Sponsor bulunamadı." });
+        }
+
+        // Sponsor'u sil
+        context.Sponsorlar.Remove(sponsor);
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Sponsor deleted successfully with ID: {SponsorId}", id);
+        return Results.Ok(new { 
+            message = "Sponsor başarıyla silindi.",
+            sponsorId = sponsor.Id
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error deleting sponsor with ID: {SponsorId}", id);
+        return Results.Problem(
+            detail: $"Sponsor silinirken bir hata oluştu: {ex.Message}",
+            statusCode: 500
+        );
+    }
+})
+.RequireAuthorization()
+.WithName("DeleteSponsor")
+.WithOpenApi()
+.WithTags("Admin");
+
 app.Run();
