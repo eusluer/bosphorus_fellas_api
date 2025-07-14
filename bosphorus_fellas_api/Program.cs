@@ -544,14 +544,11 @@ app.MapPost("/api/hash-password", (string password) =>
 
 // DOSYA YÖNETİMİ ENDPOINT'LERİ
 
-// Fotoğraf yükleme (Admin ve Üye)
+// Fotoğraf yükleme (Public - Üye başvurusu için)
 app.MapPost("/api/upload", async (HttpContext context, SupabaseStorageService storageService) =>
 {
-    var userType = context.User.FindFirst("UserType")?.Value;
-    if (string.IsNullOrEmpty(userType))
-    {
-        return Results.Unauthorized();
-    }
+    // Authentication kontrolü kaldırıldı - public endpoint
+    // Üye başvurusu sırasında fotoğraf yükleyebilmek için
 
     try
     {
@@ -617,7 +614,6 @@ app.MapPost("/api/upload", async (HttpContext context, SupabaseStorageService st
         );
     }
 })
-.RequireAuthorization()
 .WithName("FileUpload")
 .WithOpenApi()
 .WithTags("Dosya");

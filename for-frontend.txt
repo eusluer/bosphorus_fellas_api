@@ -166,10 +166,9 @@ Content-Type: application/json
 
 ## 📸 Dosya Yükleme
 
-### 1. Fotoğraf Yükleme
+### 1. Fotoğraf Yükleme (Public)
 ```http
 POST /api/upload
-Authorization: Bearer TOKEN
 Content-Type: multipart/form-data
 
 Form Data:
@@ -781,7 +780,7 @@ Authorization: Bearer ADMIN_TOKEN
 
 ### Senaryo 1: Üyelik Başvurusu (Fotoğraflı)
 ```javascript
-// 1. Profil fotoğrafı yükle
+// 1. Profil fotoğrafı yükle (Public endpoint)
 const uploadPhoto = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
@@ -789,7 +788,6 @@ const uploadPhoto = async (file) => {
   
   const response = await fetch('/api/upload', {
     method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + token },
     body: formData
   });
   
