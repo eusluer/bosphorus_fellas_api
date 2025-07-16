@@ -21,6 +21,9 @@ public class Etkinlik
     [Column("fotograf")]
     public string? Fotograf { get; set; }
 
+    [Column("pdf_url")]
+    public string? PdfUrl { get; set; }
+
     [Required]
     [Column("adres")]
     public string Adres { get; set; } = string.Empty;
